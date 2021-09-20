@@ -1,5 +1,7 @@
 # `ts-dxf`
 
+[![npm](https://img.shields.io/npm/v/ts-dxf)](https://www.npmjs.com/package/ts-dxf)
+
 A ts lib to parse dxf in browser
 
 ## install
