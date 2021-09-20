@@ -1,0 +1,7 @@
+# 排除lib、tests目录
+lib/
+tests/
+.github/
+
+tslint.json
+tsconfig.json
