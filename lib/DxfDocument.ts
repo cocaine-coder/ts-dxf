@@ -4,12 +4,12 @@ import { Block, BlockSection, DxfEntityType, EntityBase, HeaderVariables, Layer,
 
 export default class DxfDocument {
 
-    private entities = new Dictionary<DxfEntityType, Array<EntityBase>>();
-    private headers = new HeaderVariables();
-    private layers = new Array<Layer>();
-    private lineTypes = new Array<LineType>();
-    private viewPort = new Array<ViewPort>();
-    private blocks = new Array<Block>();
+    entities = new Dictionary<DxfEntityType, Array<EntityBase>>();
+    headers = new HeaderVariables();
+    layers = new Array<Layer>();
+    lineTypes = new Array<LineType>();
+    viewPort = new Array<ViewPort>();
+    blocks = new Array<Block>();
 
     /**
      * dxf 字符文档转化为相应的内存数据
