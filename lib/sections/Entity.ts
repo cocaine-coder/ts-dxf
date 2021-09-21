@@ -3,7 +3,7 @@ import { dxfColors } from '../DxfDefine';
 import { Group } from '../GroupEnumerator';
 import { Coordinate, ISectionBase } from "./Common";
 
-export type DxfEntityType = 'ARC' | 'CIRCLE' | 'POINT' | 'ELLIPSE' | 'LINE' | 'LWPOLYLINE' | 'POLYLINE' | 'VERTEX';
+export type DxfEntityType = 'ARC' | 'CIRCLE' | 'POINT' | 'ELLIPSE' | 'LINE' | 'LWPOLYLINE' | 'POLYLINE' | 'VERTEX' | 'TEXT';
 
 export abstract class EntityBase {
     type = "";
@@ -48,6 +48,7 @@ export abstract class EntityBase {
             case 'LWPOLYLINE': return new LwPolyline();
             case 'POLYLINE': return new Polyline();
             case 'VERTEX': return new Vertex();
+            case 'TEXT' : return new Text();
             default:
                 //console.debug(`not support the entity of dxf : ${type}`);
                 return undefined;
@@ -128,7 +129,7 @@ export class Arc extends EntityBase {
     endAngle = 0;
 
     parse(g: Group): void {
-        while (g && g.code != 0) {
+        while (g?.code != 0) {
             let { code, value } = g;
             switch (code) {
                 case 10:
@@ -154,7 +155,7 @@ export class Circle extends EntityBase {
     radius: number;
 
     parse(g: Group): void {
-        while (g && g.code != 0) {
+        while (g?.code != 0) {
             let { code, value } = g;
             switch (code) {
                 case 10:
@@ -182,7 +183,7 @@ export class Ellipse extends EntityBase {
     name: string;
 
     parse(g: Group): void {
-        while (g && g.code !== 0) {
+        while (g?.code !== 0) {
             let { code, value } = g;
 
             switch (code) {
@@ -213,13 +214,13 @@ export class Ellipse extends EntityBase {
     }
 }
 
-export class Point extends EntityBase{
+export class Point extends EntityBase {
     position: Coordinate;
     thickness: number;
     extrusionDirection: Coordinate;
 
     parse(g: Group): void {
-        while (g && g.code !== 0) {
+        while (g?.code !== 0) {
             let { code, value } = g;
 
             switch (code) {
@@ -250,7 +251,7 @@ export class Line extends EntityBase {
     extrusionDirection: Coordinate;
 
     parse(g: Group): void {
-        while (g && g.code != 0) {
+        while (g?.code != 0) {
 
             switch (g.code) {
                 case 10:
@@ -288,7 +289,7 @@ export class LwPolyline extends EntityBase {
     points = new Array<Coordinate>();
 
     parse(g: Group): void {
-        while (g && g.code !== 0) {
+        while (g?.code !== 0) {
             let { code, value } = g;
             switch (code) {
                 case 38:
@@ -306,7 +307,7 @@ export class LwPolyline extends EntityBase {
                 case 10: // 读取点数据
                     if (this.numOfPoints <= 0) g.parent.throwError("count of points in lwpolyline must larger than zero");
                     for (let i = 0; i < this.numOfPoints; i++) {
-                        while(g.code !== 10)
+                        while (g.code !== 10)
                             g = g.parent.moveNext();
                         let point = Coordinate.parse(g);
                         this.points.push(point);
@@ -338,20 +339,20 @@ export class LwPolyline extends EntityBase {
 export class Polyline extends EntityBase {
 
     thickness: number;
-    closed:boolean;
-    includesCurveFitVertices:boolean;
+    closed: boolean;
+    includesCurveFitVertices: boolean;
     includesSplineFitVertices: boolean;
     is3dPolyline: boolean;
     is3dPolygonMesh: boolean;
     is3dPolygonMeshClosed: boolean;
     isPolyfaceMesh: boolean;
     hasContinuousLinetypePattern: boolean;
-    extrusionDirection : Coordinate;
+    extrusionDirection: Coordinate;
 
     vertices = new Array<Vertex>();
 
     parse(g: Group): void {
-        while (g && g.code !== 0) {
+        while (g?.code !== 0) {
             let { code, value } = g;
 
             switch (code) {
@@ -382,7 +383,7 @@ export class Polyline extends EntityBase {
                 case 75:
                     break;
                 case 210:
-                    this.extrusionDirection= Coordinate.parse(g);
+                    this.extrusionDirection = Coordinate.parse(g);
                     break;
                 default:
                     this.parseCommon(g);
@@ -391,23 +392,23 @@ export class Polyline extends EntityBase {
             g = g.parent.moveNext();
         }
 
-        while(!g.isEOF()){
-            let {code,value} = g;
-            if(code !== 0) break;
-            
-            if(value ==='VERTEX'){
+        while (!g.isEOF()) {
+            let { code, value } = g;
+            if (code !== 0) break;
+
+            if (value === 'VERTEX') {
+                g = g.parent.moveNext();
                 let vertex = new Vertex();
                 vertex.parse(g);
                 this.vertices.push(vertex);
                 g = g.parent.current();
             }
-            else if(value ==='SEQEND')
-            {
+            else if (value === 'SEQEND') {
                 g = g.parent.moveNext();
-                while(g.code !== 0)
-                    g = g.parent.moveNext(); 
+                while (g.code !== 0)
+                    g = g.parent.moveNext();
             }
-            else 
+            else
                 break;
         }
     }
@@ -432,8 +433,7 @@ export class Vertex extends EntityBase {
     faceD: number;
 
     parse(g: Group): void {
-        g = g.parent.moveNext();
-        while (g && g.code !== 0) {
+        while (g?.code !== 0) {
             let { code, value } = g;
 
             switch (code) {
@@ -485,8 +485,54 @@ export class Vertex extends EntityBase {
     }
 }
 
+export class Text extends EntityBase {
+    text: string = '';
+    position: Coordinate;
+    height: number;
+    width: number;
+    rotation: number;
+    attachmentPoint: number;
+    drawingDirection: number;
+
+    parse(g: Group): void {
+        while (g?.code !== 0) {
+            let { code, value } = g;
+            switch (code) {
+                case 1:
+                case 3:
+                    this.text += value;
+                    break;
+                case 10:
+                    this.position = Coordinate.parse(g);
+                    break;
+                case 40:
+                    //Note: this is the text height
+                    this.height = value;
+                    break;
+                case 41:
+                    this.width = value;
+                    break;
+                case 50:
+                    this.rotation = value;
+                    break;
+                case 71:
+                    this.attachmentPoint = value;
+                    break;
+                case 72:
+                    this.drawingDirection = value;
+                    break;
+                default:
+                    this.parseCommon(g);
+                    break;
+            }
+
+            g = g.parent.moveNext();
+        }
+    }
+}
+
 export class EntitySection implements ISectionBase {
-    
+
     parse(g: Group) {
         let entities = new Dictionary<DxfEntityType, Array<EntityBase>>();
         let currentEntityType: DxfEntityType;
@@ -503,10 +549,10 @@ export class EntitySection implements ISectionBase {
             }
             else// set value to entity
             {
-                if(!currentEntity){
+                if (!currentEntity) {
                     g = g.parent.moveNext();
                     continue;
-                } 
+                }
 
                 currentEntity.parse(g);
 

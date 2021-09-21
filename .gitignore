@@ -108,5 +108,7 @@ dist
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
 dist
 node_modules
+tests/res
