@@ -1,5 +1,7 @@
 # `ts-dxf`
 
+**this repository has remove to** [ts-gis/ts-dxf](https://github.com/ts-gis/ts-dxf.git)
+
 [![npm](https://img.shields.io/npm/v/ts-dxf)](https://www.npmjs.com/package/ts-dxf)
 
 A ts lib to parse dxf in browser
